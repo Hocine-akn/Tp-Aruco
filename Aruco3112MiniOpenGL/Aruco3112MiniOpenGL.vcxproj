@@ -22,10 +22,12 @@
     <ClCompile Include="ArUco-OpenGL.cpp" />
     <ClCompile Include="aruco_test_gl.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ArUco-OpenGL.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="Sphere.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

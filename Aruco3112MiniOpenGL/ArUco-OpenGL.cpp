@@ -9,6 +9,7 @@
 #include "ArUco-OpenGL.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2\calib3d.hpp>
+#include "Sphere.h"
 
 // JPEG Lib
 
@@ -118,6 +119,48 @@ void ArUco::drawBox(GLfloat size, GLenum type)
 			glEnd();
 		}
 }
+void ArUco::drawPanda() {
+	// On va dessiner en blanc
+	glColor3f(1.0f, 1.0f, 1.0f);
+	cout << "snowmannn" << endl;
+	// Corps du Panda
+	//glTranslatef(0.0f, 0.75f, 0.0f);
+	//DisplaySphere(1.f);
+	drawBox(0.75f*m_MarkerSize, GL_QUADS);
+	//glutSolidSphere(0.75f, 20, 20);
+	
+	// Tete du panda
+	glColor3f(0.9f, 0.9f, 0.9f);
+	glTranslatef(0.0f, 0.0f, 0.75f * m_MarkerSize);
+	drawBox(m_MarkerSize*0.5, GL_QUADS);
+	//DisplaySphere(0.25f);
+	
+	// gluSolidSphere(0.25f, 20, 20);
+
+	// Yeux du bonhomme du Panda : deux spheres noires
+	glPushMatrix();
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glTranslatef(m_MarkerSize*0.1f, m_MarkerSize*0.25f, m_MarkerSize*0.10f);
+	drawBox(m_MarkerSize * 0.1f, GL_QUADS);
+	//glutSolidSphere(0.05f, 10, 10);
+	glTranslatef(m_MarkerSize *-0.2f, 0.0f, 0.0f);
+	drawBox(m_MarkerSize * 0.1f, GL_QUADS);
+	//glutSolidSphere(0.05f, 10, 10);
+	glPopMatrix();
+
+	//oreilles du panda
+	glPushMatrix();
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glTranslatef(m_MarkerSize*0.25f , 0 , m_MarkerSize * 0.10f);
+	drawBox(m_MarkerSize * 0.1f, GL_QUADS);
+
+
+	glTranslatef(m_MarkerSize*-0.5f,0,0);
+	drawBox(m_MarkerSize * 0.1f, GL_QUADS);
+	glPopMatrix();
+
+	
+}
 
 // GLUT functionnalities
 
@@ -179,10 +222,10 @@ void ArUco::drawScene() {
        glLoadMatrixd(modelview_matrix);
       
       // On dessine les axes X Y Z
-      drawAxis(m_MarkerSize);
+      //drawAxis(m_MarkerSize);
 
       // On se deplace sur Z de la moitie du marqueur pour dessiner "sur" le plan du marqueur
-      glTranslatef(0, 0, 0);
+      glTranslatef(0, 0, m_MarkerSize/2.);
      
 	  // On sauvegarde la matrice courante
       glPushMatrix();
@@ -190,18 +233,112 @@ void ArUco::drawScene() {
 	  glColor3f(1, 0.4f, 0.4f);
 
 	  //On dessine une cube en fil de fer
-      drawWireCube( m_MarkerSize );
+      //drawWireCube( m_MarkerSize );
 
       // Ajouter votre code ici !!
+	  //drawpanda;
+	  //glBegin(GL_LINES);
+	 // glVertex2f(0, 0);
+	 // glVertex2f(30, 0); // Longueur du bras
+	  //glEnd();
       
+	 
 
       // On re=charge la matrice que l'on a sauvegarde
       glPopMatrix();
    }
-   
+   if (m_Markers.size() >= 2) {
+	   // récupérer les deux premiers marqueurs
+	   cv::Point2f marker1 = m_Markers[0].getCenter();
+	   cv::Point2f marker2 = m_Markers[1].getCenter();
+
+	   // distance entre les deux marqueurs
+	   float distance = cv::norm(marker1 - marker2);
+	   cout << "distance=" << distance << endl;
+
+	   // Calculer l'angle de la pince en fonction de la distance
+	   float max_distance = 500.0f; // Distance maximale pour que le ciseau soit completement ouverte
+	   float clamp_distance = std::min(distance, max_distance);
+	   float angle_ouverture = clamp_distance / max_distance;
+
+	   // Dessiner les bras du ciseau
+	   glColor3f(1.0f, 0.4f, 0.4f);
+	   // On recupere la matrice de modelview qui correspond au marqueur 0
+	   m_Markers[0].glGetModelViewMatrix(modelview_matrix);
+	   glMatrixMode(GL_MODELVIEW);
+	   glLoadIdentity();
+	   // on charge cette matrice pour se placer dans le repere de ce marqueur [m] 
+	   glLoadMatrixd(modelview_matrix);
+
+	   glPushMatrix();
+
+	 // on dessine le premier bras du ciseau
+	   glTranslatef(0.f, 0.f, 0.f);  // Centrer sur le premier marqueur
+	   glRotatef(angle_ouverture * 90.0f, 0, 0, 1);    // Rotation des bras en fonction de la distance
+	   glBegin(GL_QUADS);
+	   glVertex2f(0, -m_MarkerSize * 0.125f);   
+	   glVertex2f(m_MarkerSize * 2, -m_MarkerSize * 0.125f);  
+	   glVertex2f(m_MarkerSize * 2, m_MarkerSize * 0.125f);   
+	   glVertex2f(0, m_MarkerSize * 0.125f);   
+	   glEnd(); 
+
+	   glTranslatef(m_MarkerSize * 2, 0.0f, 0.0f);
+	   glBegin(GL_TRIANGLE_FAN); // Dessin d'un petit cercle
+	   glVertex2f(0.0f, 0.0f);  
+	   for (int i = 0; i <= 360; i++) {
+		   float angle = i * 3.14159f / 180.0f;  // Conversion en radians
+		   float x = cos(angle) * m_MarkerSize*0.25f ; // Rayon du cercle
+		   float y = sin(angle) * m_MarkerSize*0.25f ;
+		   glVertex2f(x, y);
+	   }
+	   glEnd();
+	   glPopMatrix();
+
+
+	   //on recommence pour la deuxieme pince
+	   // On recupere la matrice de modelview qui correspond au marqueur 1
+	   m_Markers[1].glGetModelViewMatrix(modelview_matrix);
+	   glMatrixMode(GL_MODELVIEW);
+	   glLoadIdentity();
+	   // on charge cette matrice pour se placer dans le repere de ce marqueur  
+	   glLoadMatrixd(modelview_matrix);
+	   // Bras droit (segment)
+	   glPushMatrix();
+	   //second bras
+	   /*glTranslatef(0.f, 0.f, 0.f);  // Centrer sur le second marqueur
+	   glRotatef(-angle_ouverture * 90.0f, 0, 0, 1);   // Rotation en sens inverse
+	   glBegin(GL_LINES);
+	   glVertex2f(0, 0);  // Premier point de la ligne 
+	   glVertex2f(30, 0); // Deuxième point de la ligne */
+	   glTranslatef(0.f, 0.f, 0.f);  // Centrer sur le premier marqueur
+	   glRotatef(-angle_ouverture * 90.0f, 0, 0, 1);    // Rotation des bras en fonction de la distance
+	   glBegin(GL_QUADS);
+	   glVertex2f(0, -m_MarkerSize * 0.125f);
+	   glVertex2f(m_MarkerSize * 2, -m_MarkerSize * 0.125f);
+	   glVertex2f(m_MarkerSize * 2, m_MarkerSize * 0.125f);
+	   glVertex2f(0, m_MarkerSize * 0.125f);
+	   glEnd();
+
+	   glTranslatef(m_MarkerSize * 2, 0.0f, 0.0f);
+	   glBegin(GL_TRIANGLE_FAN); // Dessin d'un petit cercle
+	   glVertex2f(0.0f, 0.0f);
+	   for (int i = 0; i <= 360; i++) {
+		   float angle = i * 3.14159f / 180.0f;  // Conversion en radians
+		   float x = cos(angle) * m_MarkerSize * 0.25f; // Rayon du cercle
+		   float y = sin(angle) * m_MarkerSize * 0.25f;
+		   glVertex2f(x, y);
+	   }
+	   glEnd();
+	   glPopMatrix();
+
+
+   }
    // Desactivation du depth test
    glDisable(GL_DEPTH_TEST);
 }
+
+
+
 
 
 
@@ -224,6 +361,8 @@ void ArUco::idle(Mat newImage) {
    cv::resize(m_UndInputImage,m_ResizedImage,m_GlWindowSize);
 
    //detect markers
+   m_Markers_old = m_Markers;
+   
    m_PPDetector.detect(m_ResizedImage, m_Markers, m_CameraParams, m_MarkerSize, false);
 
 }

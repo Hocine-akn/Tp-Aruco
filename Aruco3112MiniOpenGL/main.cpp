@@ -9,7 +9,7 @@
 // OpenGL/GLUT
 #include <Windows.h>
 #include <glfw3.h>
-
+#include "Sphere.h"
 
 
 
@@ -162,6 +162,7 @@ void initGL(int argc, char * argv[]) {
            exit(EXIT_SUCCESS);
        }
    }
+   CreateSphere(70., 0., 0. ,0.);
 }
 
 

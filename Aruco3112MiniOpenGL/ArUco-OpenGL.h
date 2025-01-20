@@ -41,6 +41,7 @@ protected:
    
    // Vector of detected markers in the image
    vector<Marker>    m_Markers;
+   vector<Marker>    m_Markers_old;
    
    // OpenCV matrices storing the images
    // Input Image
@@ -75,7 +76,7 @@ public:
    
    // Draw axis function
    void  drawWireCube(GLdouble size);
-
+   void  drawPanda();
 
    // GLUT functionnalities
    
@@ -92,6 +93,9 @@ public:
    // Test using ArUco to display a 3D cube in OpenCV
    void  draw3DCube(cv::Mat img, int markerInd=0);
    void  draw3DAxis(cv::Mat img, int markerInd=0);
+
+
+
 };
 
 
